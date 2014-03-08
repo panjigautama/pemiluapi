@@ -8,7 +8,11 @@
         android:minSdkVersion="14"
         android:targetSdkVersion="19" />
 
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
+        android:name="com.hackathon.pemilu.HackathonApplication"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
@@ -16,10 +20,23 @@
         <activity
             android:name="com.hackathon.pemilu.MainActivity_"
             android:label="@string/app_name" >
+        </activity>
+        <activity
+            android:name="com.hackathon.pemilu.SearchNIKActivity_"
+            android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name="com.hackathon.pemilu.SelectCandidateActivity"
+            android:label="@string/app_name" >
+        </activity>
+        <activity
+            android:name="com.hackathon.pemilu.SelectPartyActivity"
+            android:label="@string/app_name" >
         </activity>
     </application>
 
