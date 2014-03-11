@@ -10,71 +10,49 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
+import android.widget.GridView;
 
 import com.actionbarsherlock.app.SherlockFragment;
-import com.google.gson.Gson;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
 public class DPRFragment extends SherlockFragment {
 
-	private CandidateListAdapter adapter;
-	private ArrayList<Candidate> candidateList;
-	private HackathonApplication application;
-	private SessionManager session;
+	private GridView gridView;
+	private ArrayList<Party> partyList;
+	private ImageAdapter adapter;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-
-		application = (HackathonApplication) getSherlockActivity()
-				.getApplicationContext();
-		session = application.getSession();
-
 		View view = inflater.inflate(R.layout.fragment_dpr, null);
-		final ListView candidateListView = (ListView) view
-				.findViewById(R.id.dpr_listview);
-		candidateListView.setEmptyView(view.findViewById(R.id.progressBar));
-
-		candidateList = new ArrayList<Candidate>();
+		gridView = (GridView) view.findViewById(R.id.grid_view);
+		partyList = new ArrayList<Party>();
 
 		RequestParams params = new RequestParams();
-		params.put("lembaga", "DPR");
 		params.put("apiKey", Constants.PEMILUAPI_KEY);
-		params.put("provinsi", String.valueOf(session.getProvinceId()));
-		params.put("partai", String.valueOf(session.getPartyId()));
-		System.out.println(session.getProvinceId());
-		System.out.println(session.getPartyId());
-
-		HackathonRESTClient.get("/candidate/api/caleg", params,
+		HackathonRESTClient.get("/candidate/api/partai", params,
 				new JsonHttpResponseHandler() {
 					@Override
 					public void onSuccess(JSONObject response) {
-						Gson gson = new Gson();
-						JSONArray candidateArray;
 						try {
-							System.out.println(response.toString());
-							candidateArray = response.getJSONObject("data")
+							JSONArray partyArray = response
+									.getJSONObject("data")
 									.getJSONObject("results")
-									.getJSONArray("caleg");
-							for (int i = 0; i < candidateArray.length(); i++) {
-								Candidate candidate = gson.fromJson(
-										candidateArray.getJSONObject(i)
-												.toString(), Candidate.class);
-								candidateList.add(candidate);
+									.getJSONArray("partai");
+							for (int i = 0; i < partyArray.length(); i++) {
+								JSONObject partyObject = partyArray
+										.getJSONObject(i);
+								Party party = new Party(partyObject
+										.getString("nama"), partyObject
+										.getString("nama_lengkap"), partyObject
+										.getInt("id"), partyObject
+										.getString("url_logo_medium"));
+								partyList.add(party);
 							}
-							getSherlockActivity().runOnUiThread(new Runnable() {
-
-								@Override
-								public void run() {
-									adapter = new CandidateListAdapter(
-											getSherlockActivity(),
-											candidateList);
-									candidateListView.setAdapter(adapter);
-								}
-							});
-
+							adapter = new ImageAdapter(getSherlockActivity(),
+									partyList);
+							gridView.setAdapter(adapter);
 						} catch (JSONException e) {
 							e.printStackTrace();
 						}
@@ -83,5 +61,4 @@ public class DPRFragment extends SherlockFragment {
 
 		return view;
 	}
-
 }

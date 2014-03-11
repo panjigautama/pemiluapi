@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="10dp"
+    android:orientation="vertical" >
+
+<!--     <Button
+        android:id="@+id/connect_instagram"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="instagram" /> -->
+
+    <ImageView
+        android:id="@+id/connect_twitter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:src="@drawable/twitter_dc"
+        android:layout_marginBottom="10dp"
+        android:text="twitter" />
+
+    <ImageView
+        android:id="@+id/connect_facebook"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:src="@drawable/facebook_dc"
+        android:text="facebook" />
+
+</LinearLayout>

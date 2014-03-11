@@ -1,61 +1,76 @@
 package com.hackathon.pemilu;
 
-import java.util.ArrayList;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.os.Bundle;
-import android.widget.GridView;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.ViewPager;
 
-import com.actionbarsherlock.app.SherlockActivity;
-import com.loopj.android.http.JsonHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
+import com.actionbarsherlock.app.ActionBar;
+import com.actionbarsherlock.app.ActionBar.Tab;
+import com.actionbarsherlock.app.SherlockFragmentActivity;
 
-public class SelectPartyActivity extends SherlockActivity {
+public class SelectPartyActivity extends SherlockFragmentActivity implements
+		ActionBar.TabListener {
 
-	GridView gridView;
-	ArrayList<Party> partyList;
-	ImageAdapter adapter;
+	ViewPager viewPager;
+
+	TabsPageAdapter adapter;
+	ActionBar actionBar;
+
+	String[] tabs = { "DPR", "DPD" };
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_select_party);
+		viewPager = (ViewPager) findViewById(R.id.pager);
+		actionBar = getSupportActionBar();
+		adapter = new TabsPageAdapter(getSupportFragmentManager());
 
-		gridView = (GridView) findViewById(R.id.grid_view);
-		partyList = new ArrayList<Party>();
+		viewPager.setAdapter(adapter);
+		actionBar.setHomeButtonEnabled(false);
+		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 
-		RequestParams params = new RequestParams();
-		params.put("apiKey", Constants.PEMILUAPI_KEY);
-		HackathonRESTClient.get("/candidate/api/partai", params,
-				new JsonHttpResponseHandler() {
-					@Override
-					public void onSuccess(JSONObject response) {
-						try {
-							JSONArray partyArray = response
-									.getJSONObject("data")
-									.getJSONObject("results")
-									.getJSONArray("partai");
-							for (int i = 0; i < partyArray.length(); i++) {
-								JSONObject partyObject = partyArray
-										.getJSONObject(i);
-								Party party = new Party(partyObject
-										.getString("nama"), partyObject
-										.getString("nama_lengkap"), partyObject
-										.getInt("id"), partyObject
-										.getString("url_logo_medium"));
-								partyList.add(party);
-							}
-							adapter = new ImageAdapter(
-									SelectPartyActivity.this, partyList);
-							gridView.setAdapter(adapter);
-						} catch (JSONException e) {
-							e.printStackTrace();
-						}
-					}
-				});
+		for (String tab : tabs) {
+			actionBar.addTab(actionBar.newTab().setText(tab)
+					.setTabListener(this));
+		}
+		viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+
+			@Override
+			public void onPageSelected(int arg0) {
+				actionBar.setSelectedNavigationItem(arg0);
+				if (arg0 == 0) {
+					setTitle("Pilih partai politik");
+				} else {
+					setTitle("Daftar Caleg DPD");
+				}
+			}
+
+			@Override
+			public void onPageScrolled(int arg0, float arg1, int arg2) {
+
+			}
+
+			@Override
+			public void onPageScrollStateChanged(int arg0) {
+
+			}
+		});
+	}
+
+	@Override
+	public void onTabSelected(Tab tab, FragmentTransaction ft) {
+		viewPager.setCurrentItem(tab.getPosition());
+	}
+
+	@Override
+	public void onTabUnselected(Tab tab, FragmentTransaction ft) {
+
+	}
+
+	@Override
+	public void onTabReselected(Tab tab, FragmentTransaction ft) {
+
 	}
 
 }

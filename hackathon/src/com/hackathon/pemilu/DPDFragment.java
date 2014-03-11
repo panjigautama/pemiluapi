@@ -6,10 +6,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 import com.actionbarsherlock.app.SherlockFragment;
@@ -43,9 +46,6 @@ public class DPDFragment extends SherlockFragment {
 		params.put("lembaga", "DPD");
 		params.put("apiKey", Constants.PEMILUAPI_KEY);
 		params.put("provinsi", String.valueOf(session.getProvinceId()));
-		params.put("partai", String.valueOf(session.getPartyId()));
-		System.out.println(session.getProvinceId());
-		System.out.println(session.getPartyId());
 
 		HackathonRESTClient.get("/candidate/api/caleg", params,
 				new JsonHttpResponseHandler() {
@@ -71,6 +71,25 @@ public class DPDFragment extends SherlockFragment {
 											getSherlockActivity(),
 											candidateList);
 									candidateListView.setAdapter(adapter);
+									candidateListView
+											.setOnItemClickListener(new OnItemClickListener() {
+
+												@Override
+												public void onItemClick(
+														AdapterView<?> parent,
+														View view,
+														int position, long id) {
+													Intent i = new Intent(
+															getSherlockActivity(),
+															CandidateDetailActivity.class);
+													i.putExtra(
+															"candidate_id",
+															candidateList.get(
+																	position)
+																	.getId());
+													startActivity(i);
+												}
+											});
 								}
 							});
 

@@ -1,6 +1,5 @@
 package com.hackathon.pemilu;
 
-import java.util.ArrayList;
 
 public class Candidate {
 

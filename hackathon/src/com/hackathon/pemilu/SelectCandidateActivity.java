@@ -1,25 +1,30 @@
 package com.hackathon.pemilu;
 
+import java.util.ArrayList;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.ViewPager;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ListView;
 
-import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.app.ActionBar.Tab;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.app.SherlockActivity;
+import com.google.gson.Gson;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
 
-public class SelectCandidateActivity extends SherlockFragmentActivity implements
-		ActionBar.TabListener {
-
-	ViewPager viewPager;
-
-	TabsPageAdapter adapter;
-	ActionBar actionBar;
+public class SelectCandidateActivity extends SherlockActivity {
 	HackathonApplication application;
 	SessionManager session;
-
-	String[] tabs = { "DPR", "DPD" };
+	ListView listView;
 	int party_id;
+	ArrayList<Candidate> candidateList;
+	CandidateListAdapter adapter;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -27,6 +32,8 @@ public class SelectCandidateActivity extends SherlockFragmentActivity implements
 		setContentView(R.layout.activity_select_candidate);
 		application = (HackathonApplication) getApplicationContext();
 		session = application.getSession();
+		listView = (ListView) findViewById(R.id.dpr_listview);
+		listView.setEmptyView(findViewById(R.id.progressBar));
 
 		Bundle bundle = getIntent().getExtras();
 		if (bundle != null) {
@@ -34,53 +41,59 @@ public class SelectCandidateActivity extends SherlockFragmentActivity implements
 			session.setPartyId(party_id);
 		}
 
-		viewPager = (ViewPager) findViewById(R.id.pager);
-		actionBar = getSupportActionBar();
-		adapter = new TabsPageAdapter(getSupportFragmentManager());
+		candidateList = new ArrayList<Candidate>();
+		RequestParams params = new RequestParams();
+		params.put("lembaga", "DPR");
+		params.put("apiKey", Constants.PEMILUAPI_KEY);
+		params.put("provinsi", String.valueOf(session.getProvinceId()));
+		params.put("partai", String.valueOf(party_id));
 
-		viewPager.setAdapter(adapter);
-		actionBar.setHomeButtonEnabled(false);
-		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+		HackathonRESTClient.get("/candidate/api/caleg", params,
+				new JsonHttpResponseHandler() {
+					@Override
+					public void onSuccess(JSONObject response) {
+						Gson gson = new Gson();
+						JSONArray candidateArray;
+						try {
+							candidateArray = response.getJSONObject("data")
+									.getJSONObject("results")
+									.getJSONArray("caleg");
+							for (int i = 0; i < candidateArray.length(); i++) {
+								Candidate candidate = gson.fromJson(
+										candidateArray.getJSONObject(i)
+												.toString(), Candidate.class);
+								candidateList.add(candidate);
+							}
+							runOnUiThread(new Runnable() {
 
-		for (String tab : tabs) {
-			actionBar.addTab(actionBar.newTab().setText(tab)
-					.setTabListener(this));
-		}
-		viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+								@Override
+								public void run() {
+									adapter = new CandidateListAdapter(
+											SelectCandidateActivity.this,
+											candidateList);
+									listView.setAdapter(adapter);
+									listView.setOnItemClickListener(new OnItemClickListener() {
 
-			@Override
-			public void onPageSelected(int arg0) {
-				actionBar.setSelectedNavigationItem(arg0);
-			}
+										@Override
+										public void onItemClick(
+												AdapterView<?> parent,
+												View view, int position, long id) {
+											Intent i = new Intent(
+													SelectCandidateActivity.this,
+													CandidateDetailActivity.class);
+											i.putExtra("candidate_id",
+													candidateList.get(position)
+															.getId());
+											startActivity(i);
+										}
+									});
+								}
+							});
 
-			@Override
-			public void onPageScrolled(int arg0, float arg1, int arg2) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void onPageScrollStateChanged(int arg0) {
-				// TODO Auto-generated method stub
-
-			}
-		});
-	}
-
-	@Override
-	public void onTabSelected(Tab tab, FragmentTransaction ft) {
-		viewPager.setCurrentItem(tab.getPosition());
-	}
-
-	@Override
-	public void onTabUnselected(Tab tab, FragmentTransaction ft) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void onTabReselected(Tab tab, FragmentTransaction ft) {
-		// TODO Auto-generated method stub
-
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
+					}
+				});
 	}
 }

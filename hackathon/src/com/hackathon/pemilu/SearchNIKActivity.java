@@ -2,8 +2,10 @@ package com.hackathon.pemilu;
 
 import java.util.Locale;
 
+import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
+import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -15,11 +17,15 @@ import org.jsoup.select.Elements;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.JsonHttpResponseHandler;
@@ -34,13 +40,47 @@ public class SearchNIKActivity extends Activity {
 	@ViewById(R.id.button_search)
 	Button searchButton;
 
+	@ViewById(R.id.buttonCandidateSearch)
+	Button searchCandidateButton;
+
+	@ViewById(R.id.buttonReport)
+	Button report;
+
+	@ViewById
+	TextView nik, nama, kelamin, kelurahan, kecamatan, kabupaten, provinsi,
+			reportText;
+
+	@ViewById
+	LinearLayout dataView;
+
 	private String province;
-	protected int provinceId;
+	private int provinceId;
 	HackathonApplication application;
 	SessionManager session;
+	ProgressDialog progDialog;
+
+	@UiThread
+	void showDialog(boolean state) {
+		if ((state == true)
+				&& (progDialog == null || progDialog.isShowing() == false)) {
+			progDialog = ProgressDialog.show(this, "", "Sedang mencari...");
+			progDialog.show();
+		} else {
+			progDialog.dismiss();
+		}
+	}
+
+	@AfterViews
+	void setDataViewInvisible() {
+		dataView.setVisibility(View.GONE);
+		searchCandidateButton.setVisibility(View.GONE);
+		report.setVisibility(View.GONE);
+		reportText.setVisibility(View.GONE);
+	}
 
 	@Click(R.id.button_search)
 	void searchButtonClicked() {
+		showDialog(true);
 		String nik = searchField.getText().toString();
 		RequestParams params = new RequestParams();
 		params.put("cmd", "cari");
@@ -55,6 +95,12 @@ public class SearchNIKActivity extends Activity {
 				});
 	}
 
+	@Click(R.id.buttonCandidateSearch)
+	void candidateSearchButtonClicked() {
+		Intent i = new Intent(SearchNIKActivity.this, SelectPartyActivity.class);
+		startActivity(i);
+	}
+
 	protected void processHtml(String content) {
 		Document doc = Jsoup.parse(content);
 		Elements group = doc.getElementsByClass("form");
@@ -67,10 +113,32 @@ public class SearchNIKActivity extends Activity {
 				labelText = labelText.replace(":", "");
 				if (labelText.equals("Provinsi")) {
 					province = field.text().toLowerCase(Locale.getDefault());
+					provinsi.setText(field.text());
 				}
+				if (labelText.equals("Nama")) {
+					nama.setText(field.text());
+				}
+				if (labelText.equals("NIK")) {
+					nik.setText(field.text());
+				}
+				if (labelText.equals("Jenis kelamin")) {
+					kelamin.setText(field.text());
+				}
+				if (labelText.equals("Kelurahan")) {
+					kelurahan.setText(field.text());
+				}
+				if (labelText.equals("Kecamatan")) {
+					kecamatan.setText(field.text());
+				}
+				if (labelText.equals("Kabupaten/Kota")) {
+					kabupaten.setText(field.text());
+				}
+
 			}
-			getProvinceId(province);
+			System.out.println(province);
+			getProvinceId();
 		} else {
+			showDialog(false);
 			Elements groups = doc.getElementsByClass("fboxbody");
 			Elements errorBox = groups.select("div[class=errorbox]");
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -88,7 +156,7 @@ public class SearchNIKActivity extends Activity {
 	}
 
 	@SuppressLint("DefaultLocale")
-	private void getProvinceId(final String province) {
+	private void getProvinceId() {
 		application = (HackathonApplication) getApplicationContext();
 		session = application.getSession();
 		RequestParams params = new RequestParams();
@@ -114,11 +182,12 @@ public class SearchNIKActivity extends Activity {
 											.getInt("id");
 								}
 							}
+							showDialog(false);
 							session.setProvinceId(provinceId);
-							Intent i = new Intent(SearchNIKActivity.this,
-									SelectPartyActivity.class);
-							startActivity(i);
-
+							searchCandidateButton.setVisibility(View.VISIBLE);
+							report.setVisibility(View.VISIBLE);
+							reportText.setVisibility(View.VISIBLE);
+							dataView.setVisibility(View.VISIBLE);
 						} catch (JSONException e) {
 							e.printStackTrace();
 						}
