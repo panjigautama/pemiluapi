@@ -1,5 +1,6 @@
 package com.hackathon.pemilu;
 
+import java.util.ArrayList;
 import java.util.Locale;
 
 import org.androidannotations.annotations.AfterViews;
@@ -53,8 +54,9 @@ public class SearchNIKActivity extends Activity {
 	@ViewById
 	LinearLayout dataView;
 
-	private String province;
+	private String province, district;
 	private int provinceId;
+	private ArrayList<Area> areaList;
 	HackathonApplication application;
 	SessionManager session;
 	ProgressDialog progDialog;
@@ -129,14 +131,17 @@ public class SearchNIKActivity extends Activity {
 				}
 				if (labelText.equals("Kecamatan")) {
 					kecamatan.setText(field.text());
+					district = field.text().toLowerCase();
+					session.setDistrict(field.text());
 				}
 				if (labelText.equals("Kabupaten/Kota")) {
 					kabupaten.setText(field.text());
 				}
 
 			}
+			getDapilData();
 			System.out.println(province);
-			getProvinceId();
+			// getProvinceId();
 		} else {
 			showDialog(false);
 			Elements groups = doc.getElementsByClass("fboxbody");
@@ -153,6 +158,76 @@ public class SearchNIKActivity extends Activity {
 			});
 			builder.show();
 		}
+	}
+
+	private void getDapilData() {
+		RequestParams params = new RequestParams();
+		params.put("key", Constants.GOOGLEAPI_KEY);
+		params.put("address", district);
+		params.put("sensor", true);
+		HackathonRESTClient.getLocation(params, new JsonHttpResponseHandler() {
+			@Override
+			public void onSuccess(JSONObject response) {
+				double latitude, longitude;
+				try {
+					if (response.getString("status").equals("OK")) {
+						JSONObject location = response.getJSONArray("results")
+								.getJSONObject(0).getJSONObject("geometry")
+								.getJSONObject("location");
+						latitude = location.getDouble("lat");
+						longitude = location.getDouble("lng");
+						getDapilByLocation(latitude, longitude);
+					}
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	protected void getDapilByLocation(double latitude, double longitude) {
+		areaList = new ArrayList<Area>();
+		RequestParams params = new RequestParams();
+		params.put("apiKey", Constants.PEMILUAPI_KEY);
+		params.put("lat", latitude);
+		params.put("long", longitude);
+		HackathonRESTClient.get("/geographic/api/point", params,
+				new JsonHttpResponseHandler() {
+					@Override
+					public void onSuccess(JSONObject response) {
+						JSONArray areas = new JSONArray();
+						try {
+							areas = response.getJSONObject("data")
+									.getJSONObject("results")
+									.getJSONArray("areas");
+							for (int i = 0; i < areas.length(); i++) {
+								String kind = areas.getJSONObject(i).getString(
+										"kind");
+								String nama = areas.getJSONObject(i).getString(
+										"nama");
+								String lembaga = areas.getJSONObject(i)
+										.getString("lembaga");
+								String id;
+								if (kind.equals("Provinsi")) {
+									id = String.valueOf(areas.getJSONObject(i)
+											.getInt("id"));
+									session.setProvinceId(areas
+											.getJSONObject(i).getInt("id"));
+								}
+								id = areas.getJSONObject(i).getString("id");
+								if (lembaga.startsWith("DPRD")) {
+									session.setDapilDPRD(id, lembaga);
+								} else if (lembaga.startsWith("DPR")) {
+									session.setDapilDPR(id);
+								}
+								Area area = new Area(kind, id, nama, lembaga);
+								areaList.add(area);
+							}
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
+					}
+				});
 	}
 
 	@SuppressLint("DefaultLocale")

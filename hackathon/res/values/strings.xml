@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">hackathon</string>
+    <string name="app_name">Mata Pemilu</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
-    <string name="search">Search</string>
-
+    <string name="app_id">1510065549220016</string>
+    <string name="search">Cari</string>
+    <string name="nik">NIK</string>
+    <string name="nama">Nama</string>
+    <string name="jenis_kelamin">Jenis Kelamin</string>
+    <string name="kelurahan">Kelurahan</string>
+    <string name="kecamatan">Kecamatan</string>
+    <string name="kabupaten">Kabupaten/Kota</string>
+    <string name="provinsi">Provinsi</string>
+    
 </resources>

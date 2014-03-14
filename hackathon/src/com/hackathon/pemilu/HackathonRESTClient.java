@@ -7,12 +7,15 @@ import com.loopj.android.http.RequestParams;
 public class HackathonRESTClient {
 
 	private static AsyncHttpClient httpClient = new AsyncHttpClient();
-	private static final String DPT_URL = "http://data.kpu.go.id/dpt.php";
-	private static final String API_URL = "http://api.pemiluapi.org";
 
 	public static void getDptStatus(RequestParams params,
 			AsyncHttpResponseHandler responseHandler) {
-		httpClient.get(DPT_URL, params, responseHandler);
+		httpClient.get(Constants.DPT_URL, params, responseHandler);
+	}
+
+	public static void getLocation(RequestParams params,
+			AsyncHttpResponseHandler responseHandler) {
+		httpClient.get(Constants.GEOCODING_URL, params, responseHandler);
 	}
 
 	public static void get(String URL, RequestParams params,
@@ -21,7 +24,7 @@ public class HackathonRESTClient {
 	}
 
 	private static String getAbsoluteURL(String URL) {
-		return API_URL + URL;
+		return Constants.API_URL + URL;
 	}
 
 }

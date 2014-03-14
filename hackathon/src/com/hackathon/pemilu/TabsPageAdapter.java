@@ -14,9 +14,11 @@ public class TabsPageAdapter extends FragmentPagerAdapter {
 	public Fragment getItem(int index) {
 		switch (index) {
 		case 0:
-			return new DPRFragment();
-		case 1:
 			return new DPDFragment();
+		case 1:
+			return new DPRDFragment();
+		case 2:
+			return new DPRFragment();
 		}
 		return null;
 	}
